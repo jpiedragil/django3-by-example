@@ -18,6 +18,6 @@ def post_detail(request, year, month, day, post):
                              status='published',
                              publish__year=year,
                              publish__month=month,
-                             publish__dat=day)
+                             publish__day=day)
 
-    return render(request, 'blo/post/detail,html', {'post': post})
+    return render(request, 'blog/post/detail.html', {'post': post})
