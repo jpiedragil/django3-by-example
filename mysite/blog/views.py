@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.core.mail import send_mail
 
 # This import is used in the function based post list view.
 # from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -6,6 +7,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView
 
 from .models import Post
+from .forms import EmailPostform
 
 
 # Create your views here.
@@ -55,3 +57,37 @@ def post_detail(request, year, month, day, post):
                              publish__day=day)
 
     return render(request, 'blog/post/detail.html', {'post': post})
+
+
+def post_share(request, post_id):
+
+    sent = False
+    # Retrieve post by id
+    post = get_object_or_404(Post, id=post_id, status='published')
+
+    if request.method == 'POST':
+
+        # Form was submitted
+        form = EmailPostform(request.POST)
+
+        if form.is_valid():
+            print("Forma válida")
+            # Form fields passed validation
+            cd = form.cleaned_data
+
+            post_url = request.build_absolute_uri(post.get_absolute_url())
+            subject = f"{cd['name']} recommends you read {post.title}"
+            message = f"Read {post.title} at {post_url}\n\n" \
+                      f"{cd['name']}\'s comments: {cd['comments']}"
+            send_mail(subject, message, 'javier.piedragil@gmail.com',
+                      [cd['to']])
+            sent = True
+
+    else:
+        print("Forma vacía")
+        form = EmailPostform()
+
+    return render(request, 'blog/post/share.html',
+                  {'post': post,
+                   'form': form,
+                   'sent': sent})
